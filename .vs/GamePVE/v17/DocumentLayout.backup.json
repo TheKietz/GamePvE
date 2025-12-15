@@ -3,8 +3,40 @@
   "WorkspaceRootPath": "D:\\Unity_Project\\GamePVE\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A0C40ED3-8DC4-DA39-629E-39F00DC8229C}|Assembly-CSharp.csproj|d:\\unity_project\\gamepve\\assets\\scripts\\playercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A0C40ED3-8DC4-DA39-629E-39F00DC8229C}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\playercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A0C40ED3-8DC4-DA39-629E-39F00DC8229C}|Assembly-CSharp.csproj|d:\\unity_project\\gamepve\\assets\\scripts\\player\\playerheath.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A0C40ED3-8DC4-DA39-629E-39F00DC8229C}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\player\\playerheath.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A0C40ED3-8DC4-DA39-629E-39F00DC8229C}|Assembly-CSharp.csproj|d:\\unity_project\\gamepve\\assets\\scripts\\player\\playercombat.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A0C40ED3-8DC4-DA39-629E-39F00DC8229C}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\player\\playercombat.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A0C40ED3-8DC4-DA39-629E-39F00DC8229C}|Assembly-CSharp.csproj|D:\\Unity_Project\\GamePVE\\assets\\scripts\\boss1\\enemyai.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A0C40ED3-8DC4-DA39-629E-39F00DC8229C}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\boss1\\enemyai.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A0C40ED3-8DC4-DA39-629E-39F00DC8229C}|Assembly-CSharp.csproj|D:\\Unity_Project\\GamePVE\\assets\\scripts\\boss1\\bosshealth.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A0C40ED3-8DC4-DA39-629E-39F00DC8229C}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\boss1\\bosshealth.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Unity_Project\\GamePVE\\Assets\\Scripts\\EnemyAI.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\EnemyAI.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A0C40ED3-8DC4-DA39-629E-39F00DC8229C}|Assembly-CSharp.csproj|D:\\Unity_Project\\GamePVE\\assets\\scripts\\cameracontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A0C40ED3-8DC4-DA39-629E-39F00DC8229C}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\cameracontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Unity_Project\\GamePVE\\Assets\\Scripts\\BossHealth.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\BossHealth.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Unity_Project\\GamePVE\\Assets\\Scripts\\PlayerSkill.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\PlayerSkill.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Unity_Project\\GamePVE\\Assets\\Scripts\\PlayerController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\PlayerController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -39,15 +71,111 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "PlayerHeath.cs",
+              "DocumentMoniker": "D:\\Unity_Project\\GamePVE\\Assets\\Scripts\\Player\\PlayerHeath.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Player\\PlayerHeath.cs",
+              "ToolTip": "D:\\Unity_Project\\GamePVE\\Assets\\Scripts\\Player\\PlayerHeath.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Player\\PlayerHeath.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-14T03:17:24.63Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "PlayerCombat.cs",
+              "DocumentMoniker": "D:\\Unity_Project\\GamePVE\\Assets\\Scripts\\Player\\PlayerCombat.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Player\\PlayerCombat.cs",
+              "ToolTip": "D:\\Unity_Project\\GamePVE\\Assets\\Scripts\\Player\\PlayerCombat.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Player\\PlayerCombat.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAiAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-14T03:04:03.919Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "BossHealth.cs",
+              "DocumentMoniker": "D:\\Unity_Project\\GamePVE\\Assets\\Scripts\\Boss1\\BossHealth.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Boss1\\BossHealth.cs",
+              "ToolTip": "D:\\Unity_Project\\GamePVE\\Assets\\Scripts\\Boss1\\BossHealth.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Boss1\\BossHealth.cs",
+              "ViewState": "AgIAAAIAAAAAAAAAAAAuwBYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-14T02:36:04.234Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "EnemyAI.cs",
+              "DocumentMoniker": "D:\\Unity_Project\\GamePVE\\Assets\\Scripts\\Boss1\\EnemyAI.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Boss1\\EnemyAI.cs",
+              "ToolTip": "D:\\Unity_Project\\GamePVE\\Assets\\Scripts\\Boss1\\EnemyAI.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Boss1\\EnemyAI.cs",
+              "ViewState": "AgIAADIAAAAAAAAAAAAYwEkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-14T02:35:38.29Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "BossHealth.cs",
+              "DocumentMoniker": "D:\\Unity_Project\\GamePVE\\Assets\\Scripts\\BossHealth.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\BossHealth.cs",
+              "ToolTip": "D:\\Unity_Project\\GamePVE\\Assets\\Scripts\\BossHealth.cs",
+              "RelativeToolTip": "Assets\\Scripts\\BossHealth.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-13T16:54:29.513Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "EnemyAI.cs",
+              "DocumentMoniker": "D:\\Unity_Project\\GamePVE\\Assets\\Scripts\\EnemyAI.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\EnemyAI.cs",
+              "ToolTip": "D:\\Unity_Project\\GamePVE\\Assets\\Scripts\\EnemyAI.cs",
+              "RelativeToolTip": "Assets\\Scripts\\EnemyAI.cs",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-13T16:49:11.529Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "PlayerSkill.cs",
+              "DocumentMoniker": "D:\\Unity_Project\\GamePVE\\Assets\\Scripts\\PlayerSkill.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\PlayerSkill.cs",
+              "ToolTip": "D:\\Unity_Project\\GamePVE\\Assets\\Scripts\\PlayerSkill.cs",
+              "RelativeToolTip": "Assets\\Scripts\\PlayerSkill.cs",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAAwBoAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-13T09:42:26.308Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "CameraController.cs",
+              "DocumentMoniker": "D:\\Unity_Project\\GamePVE\\Assets\\Scripts\\CameraController.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\CameraController.cs",
+              "ToolTip": "D:\\Unity_Project\\GamePVE\\Assets\\Scripts\\CameraController.cs",
+              "RelativeToolTip": "Assets\\Scripts\\CameraController.cs",
+              "ViewState": "AgIAABwAAAAAAAAAAAAQwA4AAAA3AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-13T00:51:01.157Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
               "Title": "PlayerController.cs",
               "DocumentMoniker": "D:\\Unity_Project\\GamePVE\\Assets\\Scripts\\PlayerController.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\PlayerController.cs",
               "ToolTip": "D:\\Unity_Project\\GamePVE\\Assets\\Scripts\\PlayerController.cs",
               "RelativeToolTip": "Assets\\Scripts\\PlayerController.cs",
-              "ViewState": "AgIAABoAAAAAAAAAAAAgwB8AAAAJAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAgAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-12T15:45:42.25Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-12T15:45:42.25Z"
             }
           ]
         }
