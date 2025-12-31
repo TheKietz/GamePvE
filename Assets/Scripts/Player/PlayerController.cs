@@ -34,7 +34,7 @@ public class PlayerController : MonoBehaviour
         // Thiết lập Events cho hành động Sprint (Nhấn giữ Shift)
         controls.Gameplay.Sprint.performed += OnSprintPerformed; // Khi nhấn giữ Shift
         controls.Gameplay.Sprint.canceled += OnSprintCanceled;   // Khi nhả Shift
-
+        controls.Gameplay.Attack.performed += OnAttackPerformed;
         // Kích hoạt Action Map
         controls.Gameplay.Enable();
 
@@ -55,6 +55,7 @@ public class PlayerController : MonoBehaviour
     void FixedUpdate()
     {
         HandleMovement();
+        animator.SetBool("Grounded", isGrounded);
     }
 
     private void OnJumpPerformed(InputAction.CallbackContext context)
@@ -62,6 +63,7 @@ public class PlayerController : MonoBehaviour
         // Xử lý nhảy (Jump) chỉ khi KHÔNG tấn công
         if (!isAttacking && isGrounded == true)
         {
+            Debug.Log("Jump");
             playerRigidbody.AddForce(new Vector3(0, 1, 0) * 5, ForceMode.Impulse);
             animator.SetTrigger("Jump");
             isGrounded = false;
@@ -70,35 +72,30 @@ public class PlayerController : MonoBehaviour
 
     public void HandleMovement()
     {
-        Debug.Log("Handle Movement");
-
+        // 1. Tính toán vector di chuyển
         Vector3 movement = new Vector3(moveInput.x, 0, moveInput.y);
 
-        if (movement.magnitude > 1)
-        {
-            movement.Normalize();
-        }
+        // 2. Xoay nhân vật
+        HandleRotation(movement);
 
-        // Luôn kiểm tra điều kiện isWalking:
-        if (movement == Vector3.zero || isAttacking)
-        {
-            animator.SetBool("isWalking", false);
-        }
-        else
+        // 3. LOGIC ANIMATOR: Chỉ "Walk" khi có di chuyển VÀ đang ở dưới đất
+        // Nếu đang trên trời (isGrounded == false), bắt buộc tắt isWalking
+        if (movement != Vector3.zero && !isAttacking && isGrounded)
         {
             animator.SetBool("isWalking", true);
         }
-
-        // === LOGIC DI CHUYỂN VÀ NHẢY CHỈ KHI KHÔNG TẤN CÔNG ===
-        if (!isAttacking)
+        else
         {
-            // ÁP DỤNG DI CHUYỂN BẰNG CODE CHO WALKING/RUNNING
-            if (animator.GetBool("isWalking"))
-            {
-                playerRigidbody.MovePosition(transform.position + movement * Time.deltaTime * currentMoveSpeed);
-            }
+            animator.SetBool("isWalking", false);
+        }
 
-            HandleRotation(movement);
+        // 4. LOGIC VẬT LÝ: Di chuyển nhân vật
+        // Cho phép di chuyển trên không (nhảy xa) nhưng không bật animation đi bộ
+        if (!isAttacking && movement.magnitude > 0.1f)
+        {
+            // Di chuyển bằng Code thuần túy
+            Vector3 moveDir = movement.normalized * currentMoveSpeed * Time.deltaTime;
+            playerRigidbody.MovePosition(transform.position + moveDir);
         }
     }
 
@@ -120,7 +117,24 @@ public class PlayerController : MonoBehaviour
         currentMoveSpeed = walkSpeed;
         Debug.Log("Stopping Sprint: " + currentMoveSpeed);
     }
+    private void OnAttackPerformed(InputAction.CallbackContext context)
+    {
+        if (!isAttacking)
+        {
+            // Nếu đang nhảy thì gọi đòn đánh trên không, nếu ở đất thì gọi đòn đánh thường
+            StartCoroutine(AttackRoutine());
+        }
+    }
+    System.Collections.IEnumerator AttackRoutine()
+    {
+        isAttacking = true;
+        animator.SetTrigger("Attack"); // Trigger chung, hoặc tách ra "AirAttack"
 
+        // Chờ hết animation (ví dụ 0.5s)
+        yield return new WaitForSeconds(0.5f);
+
+        isAttacking = false;
+    }
     public void OnCollisionStay(Collision collision)
     {
         if (collision.gameObject.CompareTag("Plane"))
@@ -138,12 +152,14 @@ public class PlayerController : MonoBehaviour
             transform.rotation = rotation;
         }
     }
-    private void OnAnimatorMove()
-    {
-        if (animator && playerRigidbody)
-        {
-            Vector3 deltaPosition = animator.deltaPosition;
-            playerRigidbody.MovePosition(playerRigidbody.position + deltaPosition);
-        }
-    }
+    //private void OnAnimatorMove()
+    //{
+    //    if (animator && playerRigidbody)
+    //    {
+    //        Vector3 deltaPosition = animator.deltaPosition;
+    //        // Chỉ lấy chuyển động trục X và Z (ngang), GÁN TRỤC Y = 0
+    //        deltaPosition.y = 0;
+    //        playerRigidbody.MovePosition(playerRigidbody.position + deltaPosition);
+    //    }
+    //}
 }
