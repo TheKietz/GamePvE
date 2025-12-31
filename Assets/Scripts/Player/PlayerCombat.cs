@@ -18,11 +18,11 @@ public class PlayerCombat : MonoBehaviour
 
         foreach (Collider hit in hits)
         {
-            BossHealth boss = hit.GetComponent<BossHealth>();
-            if (boss != null)
+            EnemyHealth enemy = hit.GetComponent<EnemyHealth>();
+            if (enemy != null)
             {
-                boss.TakeDamage(damage);
-                Debug.Log("Hit Boss: -" + damage);
+                enemy.TakeDamage(damage);
+                Debug.Log("Hit Enemy: -" + damage);
             }
         }
     }
