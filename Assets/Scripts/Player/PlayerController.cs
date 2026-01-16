@@ -1,165 +1,356 @@
 ﻿using UnityEngine;
-using UnityEngine.InputSystem; 
+using UnityEngine.InputSystem;
 
+[RequireComponent(typeof(Rigidbody))]
 public class PlayerController : MonoBehaviour
 {
-    public Rigidbody playerRigidbody;
-    private bool isGrounded;
+    public Rigidbody rb;
     public Animator animator;
+    private Transform mainCameraTransform;
+    public float walkSpeed = 4f;
+    public float sprintSpeed = 6f;
+    private Quaternion lastLockOnRotation;
+    [HideInInspector] public Transform lockOnTarget;
+    [HideInInspector] public bool isAttacking;
+    [HideInInspector] public bool isDead;
+    [HideInInspector] public bool isHit;
+    [Header("Hitbox Vũ Khí")]
+    public PlayerWeaponHitbox rightHandHitbox;
+    public PlayerWeaponHitbox leftHandHitbox;
+    public PlayerWeaponHitbox leftFootHitbox;
+    public PlayerWeaponHitbox rightFootHitbox;
+    [Header("Âm Thanh")]
+    public AudioSource audioSource;
+    public AudioClip swingSound;
+    bool isGrounded;
+    Vector2 moveInput;
+    float currentSpeed;
+    [Header("Cài đặt Nhảy")]
+    public LayerMask groundLayer;
+    public float jumpForce = 5f;
+    PlayerControls controls;
 
-    [HideInInspector] public bool isAttacking = false;
-
-    // Khai báo Input Actions Asset
-    private PlayerControls controls;
-    // Tốc độ di chuyển
-    public float walkSpeed = 3.0f; // Tốc độ đi bộ (đặt trong Inspector)
-    public float sprintSpeed = 6.0f; // Tốc độ chạy nhanh (đặt trong Inspector)
-    private float currentMoveSpeed; // Tốc độ thay đổi trong runtime
-    // Biến lưu trữ giá trị di chuyển mới
-    private Vector2 moveInput;
-    
     void Awake()
     {
-        currentMoveSpeed = walkSpeed; // Bắt đầu bằng tốc độ đi bộ
-        // Khởi tạo Input Actions
+        rb = GetComponent<Rigidbody>();
+        currentSpeed = walkSpeed;
+
         controls = new PlayerControls();
 
-        // Thiết lập Event cho hành động Jump
-        controls.Gameplay.Jump.performed += OnJumpPerformed;
-
-        // Thiết lập sự kiện đọc giá trị di chuyển liên tục
+        // --- BỘ ĐIỀU KHIỂN ---
         controls.Gameplay.Move.performed += ctx => moveInput = ctx.ReadValue<Vector2>();
-        controls.Gameplay.Move.canceled += ctx => moveInput = Vector2.zero;
+        controls.Gameplay.Move.canceled += _ => moveInput = Vector2.zero;
+        controls.Gameplay.Sprint.performed += _ => currentSpeed = sprintSpeed;
+        controls.Gameplay.Sprint.canceled += _ => currentSpeed = walkSpeed;
+        controls.Gameplay.Jump.performed += _ => Jump();
 
-        // Thiết lập Events cho hành động Sprint (Nhấn giữ Shift)
-        controls.Gameplay.Sprint.performed += OnSprintPerformed; // Khi nhấn giữ Shift
-        controls.Gameplay.Sprint.canceled += OnSprintCanceled;   // Khi nhả Shift
-        controls.Gameplay.Attack.performed += OnAttackPerformed;
-        // Kích hoạt Action Map
+        // Kích hoạt
         controls.Gameplay.Enable();
 
-    }
-
-    void OnDestroy()
-    {
-        // Đảm bảo tắt Actions khi đối tượng bị hủy
-        controls.Gameplay.Disable();
-    }
-
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        Debug.Log("Start project");
+        if (Camera.main != null)
+        {
+            mainCameraTransform = Camera.main.transform;
+        }
     }
 
     void FixedUpdate()
     {
-        HandleMovement();
+        if (isDead) return;
+
+        bool isMovingInput = moveInput.sqrMagnitude > 0.01f;
+
+        isGrounded = Physics.Raycast(transform.position + Vector3.up * 0.5f, Vector3.down, 1.2f, groundLayer);
         animator.SetBool("Grounded", isGrounded);
-    }
 
-    private void OnJumpPerformed(InputAction.CallbackContext context)
-    {
-        // Xử lý nhảy (Jump) chỉ khi KHÔNG tấn công
-        if (!isAttacking && isGrounded == true)
+        // CRITICAL: Set Locked state TRƯỚC
+        bool isLockedOn = lockOnTarget != null;
+        animator.SetBool("Locked", isLockedOn);
+
+        // DI CHUYỂN
+        animator.applyRootMotion = false;
+
+        if (isMovingInput && !isAttacking && !isHit)
         {
-            Debug.Log("Jump");
-            playerRigidbody.AddForce(new Vector3(0, 1, 0) * 5, ForceMode.Impulse);
-            animator.SetTrigger("Jump");
-            isGrounded = false;
-        }
-    }
-
-    public void HandleMovement()
-    {
-        // 1. Tính toán vector di chuyển
-        Vector3 movement = new Vector3(moveInput.x, 0, moveInput.y);
-
-        // 2. Xoay nhân vật
-        HandleRotation(movement);
-
-        // 3. LOGIC ANIMATOR: Chỉ "Walk" khi có di chuyển VÀ đang ở dưới đất
-        // Nếu đang trên trời (isGrounded == false), bắt buộc tắt isWalking
-        if (movement != Vector3.zero && !isAttacking && isGrounded)
-        {
+            rb.linearDamping = 0f;
+            HandleMovement();
             animator.SetBool("isWalking", true);
         }
         else
         {
             animator.SetBool("isWalking", false);
+
+            //  FORCE RESET về 0
+            animator.SetFloat("Horizontal", 0f);
+            animator.SetFloat("Vertical", 0f);
+            animator.SetFloat("Turn", 0f);
+
+            if (!isHit)
+            {
+                rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
+                rb.linearDamping = isGrounded ? 100f : 0f;
+            }
+            else
+            {
+                rb.linearDamping = 1f;
+            }
         }
 
-        // 4. LOGIC VẬT LÝ: Di chuyển nhân vật
-        // Cho phép di chuyển trên không (nhảy xa) nhưng không bật animation đi bộ
-        if (!isAttacking && movement.magnitude > 0.1f)
+        // Ground stick
+        bool isJumpingAnimation = animator.GetCurrentAnimatorStateInfo(0).IsName("Jump");
+        if (isGrounded && !isJumpingAnimation)
         {
-            // Di chuyển bằng Code thuần túy
-            Vector3 moveDir = movement.normalized * currentMoveSpeed * Time.deltaTime;
-            playerRigidbody.MovePosition(transform.position + moveDir);
+            rb.AddForce(Vector3.down * 20f, ForceMode.Acceleration);
         }
+
+        // DEBUG
+        //if (Time.frameCount % 30 == 0)
+        //{
+        //    DebugAnimatorState();
+        //}
     }
 
-    // Hàm được gọi khi người chơi nhấn giữ phím Shift
-    private void OnSprintPerformed(InputAction.CallbackContext context)
+    void OnAnimatorMove()
     {
-        // Nếu đang tấn công, không cho phép thay đổi tốc độ
-        if (isAttacking) return;
-
-        // Đặt tốc độ hiện tại thành tốc độ chạy nhanh
-        currentMoveSpeed = sprintSpeed;
-        Debug.Log("Sprinting: " + currentMoveSpeed);
-    }
-
-    // Hàm được gọi khi người chơi nhả phím Shift
-    private void OnSprintCanceled(InputAction.CallbackContext context)
-    {
-        // Đặt tốc độ hiện tại trở lại tốc độ đi bộ cơ bản
-        currentMoveSpeed = walkSpeed;
-        Debug.Log("Stopping Sprint: " + currentMoveSpeed);
-    }
-    private void OnAttackPerformed(InputAction.CallbackContext context)
-    {
-        if (!isAttacking)
+        if (animator.applyRootMotion)
         {
-            // Nếu đang nhảy thì gọi đòn đánh trên không, nếu ở đất thì gọi đòn đánh thường
-            StartCoroutine(AttackRoutine());
+            rb.MoveRotation(rb.rotation * animator.deltaRotation);
         }
     }
-    System.Collections.IEnumerator AttackRoutine()
+
+    void HandleMovement()
+    {
+        if (isAttacking || isHit || isDead)
+        {
+            rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
+            return;
+        }
+
+        bool isLockedOn = lockOnTarget != null;
+
+        // Tính hướng di chuyển WORLD SPACE
+        Vector3 camForward = mainCameraTransform.forward;
+        Vector3 camRight = mainCameraTransform.right;
+        camForward.y = 0;
+        camRight.y = 0;
+        camForward.Normalize();
+        camRight.Normalize();
+
+        Vector3 targetMoveDir = (camForward * moveInput.y + camRight * moveInput.x).normalized;
+
+        if (isLockedOn)
+        {         
+
+            Vector3 localMoveDir = transform.InverseTransformDirection(targetMoveDir);
+
+            // ⚡ Gửi LOCAL coordinates vào Animator
+            float horizontal = localMoveDir.x; // Trái/phải theo hướng nhìn player
+            float vertical = localMoveDir.z;   // Tới/lui theo hướng nhìn player
+
+            animator.SetFloat("Horizontal", horizontal);
+            animator.SetFloat("Vertical", vertical);
+            animator.SetFloat("Turn", 0f);
+
+            //Debug.Log($"🎯 Lock-on Input → Local H={horizontal:F2}, V={vertical:F2} | World Dir={targetMoveDir}");
+
+            // Xoay mặt về địch
+            if (lockOnTarget != null)
+            {
+                Vector3 dirToEnemy = (lockOnTarget.position - transform.position);
+                dirToEnemy.y = 0;
+                dirToEnemy.Normalize();
+                Quaternion targetLookRotation = Quaternion.LookRotation(dirToEnemy);
+                lastLockOnRotation = Quaternion.Slerp(lastLockOnRotation, targetLookRotation,
+    25f * Time.fixedDeltaTime);
+                localMoveDir = Quaternion.Inverse(lastLockOnRotation) * targetMoveDir;
+                 horizontal = localMoveDir.x;
+                 vertical = localMoveDir.z;
+                transform.rotation = Quaternion.Slerp(transform.rotation, lastLockOnRotation,
+    25f * Time.fixedDeltaTime);
+            }
+        }
+        else
+        {
+            // ⚡ NORMAL MODE: Không cần chuyển đổi
+            animator.SetFloat("Horizontal", 0f);
+            animator.SetFloat("Vertical", 0f);
+            animator.SetFloat("Turn", moveInput.x);
+
+            // Xoay theo hướng chạy
+            if (targetMoveDir.sqrMagnitude > 0.01f)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(targetMoveDir);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation,
+                    15f * Time.fixedDeltaTime);
+            }
+        }
+
+        // Apply movement (WORLD SPACE)
+        if (targetMoveDir.sqrMagnitude > 0.01f)
+        {
+            if (Physics.Raycast(transform.position + Vector3.up * 0.5f, Vector3.down, out RaycastHit hitInfo, 1.5f))
+            {
+                targetMoveDir = Vector3.ProjectOnPlane(targetMoveDir, hitInfo.normal).normalized;
+                rb.linearVelocity = targetMoveDir * currentSpeed;
+            }
+            else
+            {
+                Vector3 targetVelocity = targetMoveDir * currentSpeed;
+                targetVelocity.y = rb.linearVelocity.y;
+                rb.linearVelocity = targetVelocity;
+            }
+        }
+    }
+
+    void Jump()
+    {
+        if (isDead || !isGrounded || isAttacking || isHit)
+        {
+            Debug.Log($"❌ Không nhảy được: isDead={isDead}, grounded={isGrounded}, attacking={isAttacking}, hit={isHit}");
+            return;
+        }
+
+        Vector3 vel = rb.linearVelocity;
+        vel.y = 0;
+        rb.linearVelocity = vel;
+
+        rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+        animator.SetTrigger("Jump");
+        isGrounded = false;
+
+        Debug.Log("✅ Nhảy!");
+    }
+
+    // ============= HITBOX FUNCTIONS =============
+
+    public void EnableDoubleHand()
     {
         isAttacking = true;
-        animator.SetTrigger("Attack"); // Trigger chung, hoặc tách ra "AirAttack"
+        if (rightHandHitbox) rightHandHitbox.EnableHitbox();
+        if (leftHandHitbox) leftHandHitbox.EnableHitbox();
+        PlaySwingSound();
+        if (rightFootHitbox) rightFootHitbox.DisableHitbox();
+    }
 
-        // Chờ hết animation (ví dụ 0.5s)
-        yield return new WaitForSeconds(0.5f);
+    public void EnableKick()
+    {
+        isAttacking = true;
+        if (leftFootHitbox != null)
+        {
+            leftFootHitbox.EnableHitbox();
+            Debug.Log("🦶 Đã bật Hitbox CHÂN TRÁI!");
+            PlaySwingSound();
+        }
+        if (rightFootHitbox != null) rightFootHitbox.DisableHitbox();
+        if (rightHandHitbox) rightHandHitbox.DisableHitbox();
+        if (leftHandHitbox) leftHandHitbox.DisableHitbox();
+    }
 
+    public void EnableRightHand()
+    {
+        isAttacking = true;
+        if (rightHandHitbox) rightHandHitbox.EnableHitbox();
+        PlaySwingSound();
+        if (leftHandHitbox) leftHandHitbox.DisableHitbox();
+        if (rightFootHitbox) rightFootHitbox.DisableHitbox();
+    }
+
+    public void EnableLeftHand()
+    {
+        isAttacking = true;
+        if (leftHandHitbox) leftHandHitbox.EnableHitbox();
+        PlaySwingSound();
+        if (rightHandHitbox) rightHandHitbox.DisableHitbox();
+        if (rightFootHitbox) rightFootHitbox.DisableHitbox();
+    }
+
+    public void ResetHitbox()
+    {
+        if (rightHandHitbox) rightHandHitbox.DisableHitbox();
+        if (leftHandHitbox) leftHandHitbox.DisableHitbox();
+        if (rightFootHitbox) rightFootHitbox.DisableHitbox();
+        if (leftFootHitbox) leftFootHitbox.DisableHitbox();
+    }
+
+    void PlaySwingSound()
+    {
+        if (audioSource && swingSound)
+        {
+            audioSource.pitch = Random.Range(0.9f, 1.1f);
+            audioSource.PlayOneShot(swingSound);
+        }
+    }
+
+    public void FinishAttack()
+    {
         isAttacking = false;
+        ResetHitbox();
+        Debug.Log("✅ Combo kết thúc!");
     }
-    public void OnCollisionStay(Collision collision)
+
+    public void FinishHit()
     {
-        if (collision.gameObject.CompareTag("Plane"))
+        isHit = false;
+    }
+
+    public void Die()
+    {
+        if (!isDead)
         {
-            isGrounded = true;
+            isDead = true;
+            isAttacking = false;
+            animator.SetTrigger("Die");
         }
     }
-    public void HandleRotation(Vector3 playerMovementInput)
+
+    public void ForceTakeHit()
     {
-        Vector3 lookDirection = playerMovementInput;
-        lookDirection.y = 0;
-        if (lookDirection != Vector3.zero)
-        {
-            Quaternion rotation = Quaternion.LookRotation(lookDirection);
-            transform.rotation = rotation;
-        }
+        isAttacking = false;
+        isHit = true;
+
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+        animator.SetFloat("Horizontal", 0);
+        animator.SetFloat("Vertical", 0);
+        animator.SetFloat("Speed", 0);
+        animator.ResetTrigger("Attack");
+
+        animator.SetTrigger("Hit");
+        CancelInvoke(nameof(FinishHit));
+        Invoke(nameof(FinishHit), 0.5f);
     }
-    //private void OnAnimatorMove()
+
+    public void EndHitState()
+    {
+        isHit = false;
+    }
+    void OnEnable()
+    {
+        controls.Gameplay.Enable();
+    }
+
+    void OnDisable()
+    {
+        controls.Gameplay.Disable();
+    }
+    // DEBUG FUNCTION
+    //void DebugAnimatorState()
     //{
-    //    if (animator && playerRigidbody)
+    //    AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+    //    string stateName = "Unknown";
+
+    //    AnimatorClipInfo[] clipInfo = animator.GetCurrentAnimatorClipInfo(0);
+    //    if (clipInfo.Length > 0)
     //    {
-    //        Vector3 deltaPosition = animator.deltaPosition;
-    //        // Chỉ lấy chuyển động trục X và Z (ngang), GÁN TRỤC Y = 0
-    //        deltaPosition.y = 0;
-    //        playerRigidbody.MovePosition(playerRigidbody.position + deltaPosition);
+    //        stateName = clipInfo[0].clip.name;
     //    }
+
+    //    Debug.Log($"[ANIMATOR] State: <color=cyan>{stateName}</color> | " +
+    //              $"Locked: <color=yellow>{animator.GetBool("Locked")}</color> | " +
+    //              $"H: <color=green>{animator.GetFloat("Horizontal"):F2}</color> | " +
+    //              $"V: <color=green>{animator.GetFloat("Vertical"):F2}</color> | " +
+    //              $"Turn: <color=green>{animator.GetFloat("Turn"):F2}</color> | " +
+    //              $"isWalking: {animator.GetBool("isWalking")} | " +
+    //              $"isAttacking: <color=red>{isAttacking}</color> | " +
+    //              $"Target: {(lockOnTarget != null ? lockOnTarget.name : "None")}");
     //}
 }

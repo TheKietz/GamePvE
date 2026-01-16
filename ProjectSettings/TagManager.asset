@@ -5,6 +5,10 @@ TagManager:
   serializedVersion: 3
   tags:
   - Plane
+  - Enemy
+  - CinemachineTarget
+  - Terrain
+  - PatrolPoint
   layers:
   - Default
   - TransparentFX
@@ -12,8 +16,8 @@ TagManager:
   - Player
   - Water
   - UI
-  - 
-  - 
+  - Enemy
+  - Terrain
   - 
   - 
   - 
