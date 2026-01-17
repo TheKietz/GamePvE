@@ -15,6 +15,7 @@ public class GameManager : MonoBehaviour
     [Header("Score System")]
     public TextMeshProUGUI scoreText; 
     public int currentScore = 0;
+    public TextMeshProUGUI highScoreText;
     [Header("Scene Names")]
     public string menuSceneName = "beginscene ";
 
@@ -37,11 +38,12 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         UpdateScoreUI();
+        LoadHighScore();
     }
     void OnEnable() { controls.Gameplay.Enable(); }
     void OnDisable() { controls.Gameplay.Disable(); }
     // ====================================================
-    // CÁC HÀM XỬ LÝ ĐIỂM SỐ (THÊM MỚI VÀO ĐÂY)
+    // CÁC HÀM XỬ LÝ ĐIỂM SỐ 
     // ====================================================
 
     public void AddScore(int amount)
@@ -53,6 +55,30 @@ public class GameManager : MonoBehaviour
     void UpdateScoreUI()
     {
         if (scoreText) scoreText.text = "Score: " + currentScore.ToString();
+    }
+    void LoadHighScore()
+    {
+        // Lấy điểm từ ổ cứng, nếu chưa có thì mặc định là 0
+        int highScore = PlayerPrefs.GetInt("HighScore", 0);
+
+        if (highScoreText)
+            highScoreText.text = "Best: " + highScore.ToString();
+    }
+    void CheckAndSaveHighScore()
+    {
+        int currentHighScore = PlayerPrefs.GetInt("HighScore", 0);
+
+        // Nếu điểm hiện tại LỚN HƠN kỷ lục cũ
+        if (currentScore > currentHighScore)
+        {
+            // Lưu kỷ lục mới vào ổ cứng
+            PlayerPrefs.SetInt("HighScore", currentScore);
+            PlayerPrefs.Save();
+            Debug.Log("🏆 KỶ LỤC MỚI: " + currentScore);
+
+            // Cập nhật lại giao diện ngay lập tức
+            LoadHighScore();
+        }
     }
     // ====================================================
     //  CÁC HÀM XỬ LÝ PAUSE 
@@ -117,6 +143,7 @@ public class GameManager : MonoBehaviour
     {
         if (isGameEnded) return;
         isGameEnded = true;
+        CheckAndSaveHighScore();
         Debug.Log("CHIẾN THẮNG!");
 
         if (victoryPanel != null) victoryPanel.SetActive(true);
@@ -133,6 +160,7 @@ public class GameManager : MonoBehaviour
     {
         if (isGameEnded) return;
         isGameEnded = true;
+        CheckAndSaveHighScore();
         Debug.Log("THUA CUỘC!");
 
         if (gameOverPanel != null) gameOverPanel.SetActive(true);
@@ -149,8 +177,7 @@ public class GameManager : MonoBehaviour
     {
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-    }
-
+    }    
     public void Button_BackToMenu()
     {
         Time.timeScale = 1f;

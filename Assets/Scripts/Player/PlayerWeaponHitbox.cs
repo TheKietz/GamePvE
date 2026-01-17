@@ -6,6 +6,7 @@ public class PlayerWeaponHitbox : MonoBehaviour
     public Collider myCollider;
     public GameObject bloodEffectPrefab;
     public AudioClip hitSound;
+    private PlayerController ownerPlayer;
     bool hasHit;
     bool isActive; 
 
@@ -14,6 +15,7 @@ public class PlayerWeaponHitbox : MonoBehaviour
         if (myCollider == null) myCollider = GetComponent<Collider>();
         myCollider.enabled = false;
         myCollider.isTrigger = true;
+        ownerPlayer = GetComponentInParent<PlayerController>();
     }
 
     public void EnableHitbox()
@@ -27,10 +29,10 @@ public class PlayerWeaponHitbox : MonoBehaviour
     {
         // 🔍 LOGIC BÁO TRƯỢT:
         // Nếu đang tấn công (isActive) VÀ chưa trúng ai (!hasHit) -> Đích thị là trượt
-        if (isActive && !hasHit)
-        {
-            Debug.Log($"❌ ĐÁNH TRƯỢT! ({gameObject.name}) - Hãy chỉnh Collider to/dài ra!");
-        }
+        //if (isActive && !hasHit)
+        //{
+        //    Debug.Log($"❌ ĐÁNH TRƯỢT! ({gameObject.name}) - Hãy chỉnh Collider to/dài ra!");
+        //}
 
         myCollider.enabled = false;
         isActive = false;
@@ -46,12 +48,14 @@ public class PlayerWeaponHitbox : MonoBehaviour
             BossController boss = other.GetComponentInParent<BossController>();
             if (boss != null)
             {
+                // TÍNH TỔNG DAME: Dame gốc + Bonus từ skill
+                float finalDamage = damage + (ownerPlayer != null ? ownerPlayer.bonusDamage : 0);
                 boss.TakeDamage(damage);
                 hasHit = true;
 
-                // 📊 BÁO DAME CỤ THỂ
+                // BÁO DAME CỤ THỂ
                 Debug.Log($"✅ ĐÁNH TRÚNG BOSS! Gây {damage} sát thương! (Vũ khí: {gameObject.name})");
-                // 🔥 TẠO HIỆU ỨNG MÁU
+                // TẠO HIỆU ỨNG MÁU
                 if (bloodEffectPrefab != null)
                 {
                     // Tìm điểm va chạm gần nhất để máu văng ra đúng chỗ

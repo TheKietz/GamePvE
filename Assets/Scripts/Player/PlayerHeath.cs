@@ -22,12 +22,19 @@ public class PlayerHealth : MonoBehaviour
         currentHealth = maxHealth;
         UpdateUI();
     }
-
+    public void Heal(float amount)
+    {
+        if (controller.isDead) return;
+        currentHealth += amount;
+        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth); // Không cho máu vượt quá Max
+        UpdateUI();
+        Debug.Log($"💚 Đã hồi {amount} máu! Hiện tại: {currentHealth}");
+    }
     public void TakeDamage(float damage)
     {
         // Debug.Log("TAKE DAMAGE: " + damage);
         if (controller.isDead) return;
-
+        float finalDamage = Mathf.Max(damage - controller.bonusDefense, 0);
         currentHealth -= damage;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
         UpdateUI();

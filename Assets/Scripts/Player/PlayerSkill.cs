@@ -1,107 +1,217 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
+using System.Collections.Generic;
+
+[System.Serializable]
+public class SkillSlot
+{
+    public string skillName;       // Tên (Ví dụ: "Attack 1", "Taunt")
+    public float cooldownTime;     // Thời gian hồi
+    public Image cooldownOverlay;  // Ảnh đen mờ để xoay
+
+    [HideInInspector] public float nextReadyTime = 0f; // Biến đếm giờ nội bộ
+}
 
 public class PlayerSkill : MonoBehaviour
 {
     public Animator animator;
     public PlayerController controller;
-
-    float detectionRange = 20f;
-    public LayerMask enemyLayer;
     PlayerControls controls;
 
-    float cd1, cd2, cd3;
+    [Header("Skill System UI")]
+    // Element 0 = Attack 1
+    // Element 1 = Attack 2
+    // Element 2 = Attack 3
+    // Element 3 = Taunt (Skill T)
+    public List<SkillSlot> skills;
+
+    [Header("Combat Settings")]
+    public float detectionRange = 20f;
+    public LayerMask enemyLayer;
+
+    [Header("Taunt Battery Specifics")]
+    public GameObject fireVFXPrefab;
+    public Transform leftHandPos;
+    public Transform rightHandPos;
+    public float skillDuration = 20f;
 
     void Awake()
     {
         controls = new PlayerControls();
-        controls.Gameplay.Attack1.performed += _ => TryAttack(1, ref cd1, 0.5f);
-        controls.Gameplay.Attack2.performed += _ => TryAttack(2, ref cd2, 0.7f);
-        controls.Gameplay.Attack3.performed += _ => TryAttack(3, ref cd3, 1.0f);
+
+        // Gán các nút bấm vào hệ thống Skill chung
+        // Lưu ý: Số thứ tự (0, 1, 2, 3) phải khớp với danh sách trong Inspector
+        controls.Gameplay.Attack1.performed += _ => TryUseSkill(0);
+        controls.Gameplay.Attack2.performed += _ => TryUseSkill(1);
+        controls.Gameplay.Attack3.performed += _ => TryUseSkill(2);
+        controls.Gameplay.Attack_T.performed += _ => TryUseSkill(3);
+
         controls.Gameplay.Enable();
     }
 
-    void TryAttack(int index, ref float nextTime, float cooldown)
+    void Start()
     {
-        // 🔧 FIX 1: Kiểm tra điều kiện CHI TIẾT HƠN
-        if (controller.isDead)
+        controller = GetComponent<PlayerController>();
+        animator = GetComponentInChildren<Animator>();
+
+        // Reset UI khi bắt đầu
+        foreach (var skill in skills)
         {
-            Debug.Log("❌ Không tấn công được: Đã chết");
-            return;
+            if (skill.cooldownOverlay != null) skill.cooldownOverlay.fillAmount = 0;
         }
+    }
 
-        if (controller.isAttacking)
+    void Update()
+    {
+        // --- LOGIC UI XOAY VÒNG (GIỐNG LMHT) ---
+        foreach (var skill in skills)
         {
-            Debug.Log("❌ Không tấn công được: Đang tấn công");
-            return;
-        }
-
-        if (controller.isHit)
-        {
-            Debug.Log("❌ Không tấn công được: Đang bị hit");
-            return;
-        }
-
-        if (Time.time < nextTime)
-        {
-            Debug.Log($"❌ Không tấn công được: Cooldown ({nextTime - Time.time:F1}s)");
-            return;
-        }
-
-        // 🔧 FIX 2: LOG ra để debug
-        Debug.Log($"🗡️ BẮT ĐẦU ATTACK {index} | Locked: {controller.lockOnTarget != null}");
-
-        // 1. Xoay mặt về địch (nếu có)
-        FaceClosestEnemy();
-
-        // 🔧 FIX 3: Set isAttacking TRƯỚC KHI trigger animation
-        controller.isAttacking = true;
-        // 2. Set animator parameters
-        animator.SetInteger("AttackIndex", index);
-        animator.SetTrigger("Attack");
-
-        // 3. Tính khoảng cách
-        float distanceToEnemy = GetDistanceToClosestEnemy();
-
-        if (controller.rb != null)
-        {
-            // Logic lao tới
-            if (distanceToEnemy != Mathf.Infinity && distanceToEnemy > 1.2f)
+            if (Time.time < skill.nextReadyTime)
             {
-                // Lao tới
-                controller.rb.AddForce(transform.forward * 20f, ForceMode.Impulse);
-                Debug.Log($"⚡ Lao tới địch (khoảng cách: {distanceToEnemy:F1}m)");
+                // Tính % thời gian còn lại
+                float remainingTime = skill.nextReadyTime - Time.time;
+
+                if (skill.cooldownOverlay != null)
+                    skill.cooldownOverlay.fillAmount = remainingTime / skill.cooldownTime;
             }
             else
             {
-                // Đứng yên đánh
-                controller.rb.linearVelocity = Vector3.zero;
-                controller.rb.angularVelocity = Vector3.zero;
-                Debug.Log("🎯 Đánh tại chỗ");
+                // Hồi xong thì tắt đen
+                if (skill.cooldownOverlay != null)
+                    skill.cooldownOverlay.fillAmount = 0;
             }
         }
+    }
 
-        // 4. Set cooldown
-        nextTime = Time.time + cooldown;
+    // Hàm trung gian: Kiểm tra hồi chiêu trước khi cho phép dùng
+    void TryUseSkill(int index)
+    {
+        // Kiểm tra an toàn
+        if (index >= skills.Count) return;
 
-        // 🔧 FIX 4: Tăng thời gian AutoFinish để đủ thời gian animation chạy
+        SkillSlot skill = skills[index];
+
+        // 1. Kiểm tra xem Skill đã hồi chưa?
+        if (Time.time < skill.nextReadyTime)
+        {
+            // Debug.Log($"⏳ {skill.skillName} chưa hồi! Còn {skill.nextReadyTime - Time.time:F1}s");
+            return;
+        }
+
+        // 2. Kiểm tra trạng thái Player (Chết, Đang bị đánh...) - Lấy từ code cũ
+        if (controller.isDead || controller.isHit) return;
+
+        // Nếu là chiêu đánh thường (0, 1, 2), kiểm tra xem có đang đánh dở không
+        if (index < 3 && controller.isAttacking) return;
+
+        // Nếu là chiêu Taunt (3), kiểm tra xem đang gồng chưa
+        if (index == 3 && controller.isPoweredUp) return;
+
+
+        // --- NẾU THỎA MÃN TẤT CẢ ---
+
+        // A. Kích hoạt Logic
+        bool success = false;
+        if (index == 3)
+        {
+            ActivateTauntBattery();
+            success = true;
+        }
+        else // Attack 1, 2, 3
+        {
+            // Gọi hàm đánh cũ của bạn
+            PerformAttackLogic(index + 1); // +1 vì animator bạn đặt là 1,2,3
+            success = true;
+        }
+
+        // B. Nếu kích hoạt thành công -> Bắt đầu tính giờ hồi chiêu & Quay UI
+        if (success)
+        {
+            skill.nextReadyTime = Time.time + skill.cooldownTime;
+            if (skill.cooldownOverlay != null) skill.cooldownOverlay.fillAmount = 1; // Đen sì ngay lập tức
+        }
+    }
+
+    // --- LOGIC ĐÁNH (GỐC CỦA BẠN - Đã bỏ phần check cooldown vì check ở trên rồi) ---
+    void PerformAttackLogic(int attackIndex)
+    {
+        // Debug.Log($"🗡️ BẮT ĐẦU ATTACK {attackIndex}");
+
+        FaceClosestEnemy();
+
+        controller.isAttacking = true;
+        animator.SetInteger("AttackIndex", attackIndex);
+        animator.SetTrigger("Attack");
+
+        // Logic lao tới
+        float distanceToEnemy = GetDistanceToClosestEnemy();
+        if (controller.rb != null && distanceToEnemy != Mathf.Infinity && distanceToEnemy > 1.2f)
+        {
+            controller.rb.AddForce(transform.forward * 20f, ForceMode.Impulse);
+        }
+        else if (controller.rb != null)
+        {
+            controller.rb.linearVelocity = Vector3.zero;
+            controller.rb.angularVelocity = Vector3.zero;
+        }
+
         CancelInvoke(nameof(AutoFinishAttack));
         Invoke(nameof(AutoFinishAttack), 3.0f);
     }
 
+    // --- LOGIC TAUNT (GỐC CỦA BẠN) ---
+    public void ActivateTauntBattery()
+    {
+        StartCoroutine(TauntRoutine());
+    }
+
+    System.Collections.IEnumerator TauntRoutine()
+    {
+        controller.isPoweredUp = true;
+        controller.bonusDamage = 50f;
+        controller.bonusDefense = 20f;
+        animator.SetTrigger("Taunt");
+
+        PlayerHealth health = GetComponent<PlayerHealth>();
+        if (health) health.Heal(50f);
+
+        GameObject vfxL = null, vfxR = null;
+        if (fireVFXPrefab)
+        {
+            if (leftHandPos) vfxL = Instantiate(fireVFXPrefab, leftHandPos);
+            if (rightHandPos) vfxR = Instantiate(fireVFXPrefab, rightHandPos);
+        }
+
+        float timer = skillDuration;
+        while (timer > 0)
+        {
+            yield return new WaitForSeconds(1f);
+            if (health) health.Heal(5f);
+            timer -= 1f;
+        }
+
+        controller.isPoweredUp = false;
+        controller.bonusDamage = 0f;
+        controller.bonusDefense = 0f;
+        if (vfxL) Destroy(vfxL);
+        if (vfxR) Destroy(vfxR);
+    }
+
+    // --- CÁC HÀM HỖ TRỢ (GIỮ NGUYÊN) ---
     void FaceClosestEnemy()
     {
+        // (Code cũ giữ nguyên...)
         if (controller.lockOnTarget != null)
         {
             Vector3 direction = (controller.lockOnTarget.position - transform.position).normalized;
             direction.y = 0;
             transform.rotation = Quaternion.LookRotation(direction);
-            return; 
+            return;
         }
         Collider[] enemies = Physics.OverlapSphere(transform.position, detectionRange, enemyLayer);
         Transform closestEnemy = null;
         float minDistance = Mathf.Infinity;
-
         foreach (Collider enemy in enemies)
         {
             float distance = Vector3.Distance(transform.position, enemy.transform.position);
@@ -111,49 +221,34 @@ public class PlayerSkill : MonoBehaviour
                 closestEnemy = enemy.transform;
             }
         }
-
         if (closestEnemy != null)
         {
             Vector3 direction = (closestEnemy.position - transform.position).normalized;
             direction.y = 0;
-
-            if (direction.sqrMagnitude > 0.001f)
-            {
-                transform.rotation = Quaternion.LookRotation(direction);
-            }
+            if (direction.sqrMagnitude > 0.001f) transform.rotation = Quaternion.LookRotation(direction);
         }
     }
 
     float GetDistanceToClosestEnemy()
     {
+        // (Code cũ giữ nguyên...)
         Collider[] enemies = Physics.OverlapSphere(transform.position, detectionRange, enemyLayer);
         float minDistance = Mathf.Infinity;
-
         foreach (Collider enemy in enemies)
         {
             float distance = Vector3.Distance(transform.position, enemy.transform.position);
-            if (distance < minDistance)
-            {
-                minDistance = distance;
-            }
+            if (distance < minDistance) minDistance = distance;
         }
         return minDistance;
     }
 
-    // 🔧 FIX 5: Hàm này được gọi từ Animation Event
     public void FinishAttack()
     {
         controller.isAttacking = false;
-        Debug.Log("✅ Animation Event: FinishAttack");
     }
 
-    // 🔧 FIX 6: Backup nếu Animation Event không được gọi
     private void AutoFinishAttack()
     {
-        if (controller.isAttacking)
-        {
-            controller.isAttacking = false;
-            Debug.Log("⚠️ AutoFinishAttack (Animation Event bị miss?)");
-        }
+        if (controller.isAttacking) controller.isAttacking = false;
     }
 }

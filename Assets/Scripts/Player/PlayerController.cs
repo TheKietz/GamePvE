@@ -14,11 +14,15 @@ public class PlayerController : MonoBehaviour
     [HideInInspector] public bool isAttacking;
     [HideInInspector] public bool isDead;
     [HideInInspector] public bool isHit;
-    [Header("Hitbox Vũ Khí")]
+    [Header("Hitbox")]
     public PlayerWeaponHitbox rightHandHitbox;
     public PlayerWeaponHitbox leftHandHitbox;
     public PlayerWeaponHitbox leftFootHitbox;
     public PlayerWeaponHitbox rightFootHitbox;
+    [Header("Buff System")]
+    public bool isPoweredUp = false; // Đang gồng hay không?
+    public float bonusDamage = 0f;   // Dame cộng thêm
+    public float bonusDefense = 0f;  // Giáp cộng thêm
     [Header("Âm Thanh")]
     public AudioSource audioSource;
     public AudioClip swingSound;
